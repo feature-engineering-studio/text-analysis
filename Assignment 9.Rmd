@@ -1,0 +1,78 @@
+---
+title: "Assignment 9"
+author: "Charles Lang"
+date: "April 9, 2016"
+output: html_document
+---
+#Libraries
+```{r}
+library(tm)
+library(SnowballC)
+library(wordcloud)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+#IF USING A MAC PLEASE RUN THIS CODE
+Sys.setlocale("LC_ALL", "C")
+```
+#Load data
+```{r}
+QQ <- read.table("quiz_answers.txt", sep = "\t", header = TRUE, fill = TRUE, quote = "", stringsAsFactors = FALSE)
+```
+#Process corpus using tm
+```{r}
+#Convert the data frame to the corpus format that the tm package uses
+corpus <- Corpus(VectorSource(QQ$text))
+#Remove spaces
+corpus <- tm_map(corpus, stripWhitespace)
+#Convert to lower case
+corpus <- tm_map(corpus, tolower)
+#Remove pre-defined stop words ('the', 'a', etc)
+corpus <- tm_map(corpus, removeWords, stopwords('english'), lazy = TRUE)
+#Convert words to stems ("education" = "edu") for analysis, for more info see  http://tartarus.org/~martin/PorterStemmer/
+corpus <- tm_map(corpus, stemDocument)
+#Remove numbers
+corpus <- tm_map(corpus, removeNumbers)
+#remove punctuation
+corpus <- tm_map(corpus, removePunctuation)
+#Convert to plain text for mapping by wordcloud package
+corpus <- tm_map(corpus, PlainTextDocument, lazy = TRUE)
+
+#Convert corpus to a term document matrix - so each word can be analyzed individuallly
+tdm.corpus <- as.TermDocumentMatrix(corpus)
+```
+#Generate word cloud
+```{r}
+#Define the colors the cloud will use
+col=brewer.pal(6,"Dark2")
+#Generate cloud
+wordcloud(corpus, min.freq=25, scale=c(5,2),rot.per = 0.25,
+          random.color=T, max.word=45, random.order=F,colors=col)
+```
+#Match words in corpus to lexicons of positive & negative words
+```{r}
+#Upload positive and negative word lexicons
+positive <- readLines("positive-words.txt")
+negative <- readLines("negative-words.txt")
+
+#Search for matches between each word and the two lexicons
+QQ$positive <- tm_term_score(tdm.corpus, positive)
+QQ$negative <- tm_term_score(tdm.corpus, negative)
+
+#Generate an overall pos-neg score for each line
+QQ$score <- QQ$positive - QQ$negative
+
+```
+#Generate graph for the 
+```{r}
+#Create data frame to graph
+QQ2 <- QQ %>% group_by(week) %>% summarise(mean(score))
+names(QQ2) <- c("week", "score")
+
+#Plot a line plot using ggplot
+ggplot(QQ2, aes(week, score)) + geom_line() + xlab("Week") + ylab("Mean Sentiment Score")
+```
+#Now try to plot all three scores: positive, negative, and score
+
+#If you really want a challenge, can you map the topics to the weeks on your plot?
