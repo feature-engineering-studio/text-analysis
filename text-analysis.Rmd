@@ -64,7 +64,7 @@ QQ$negative <- tm_term_score(tdm.corpus, negative)
 QQ$score <- QQ$positive - QQ$negative
 
 ```
-#Generate graph for the 
+#Generate graph for the sentiment over time
 ```{r}
 #Create data frame to graph
 QQ2 <- QQ %>% group_by(week) %>% summarise(mean(score))
