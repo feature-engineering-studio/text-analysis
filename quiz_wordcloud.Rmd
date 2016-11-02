@@ -1,0 +1,38 @@
+---
+title: "NLP"
+author: "Charles Lang"
+date: "April 7, 2016"
+output: html_document
+---
+```{r}
+install.packages("tm", "wordcloud", "Snowball")
+library(tm)
+library(wordcloud)
+library(SnowballC)
+```
+
+
+```{r}
+quiz <- Corpus(DirSource("quiz"))
+
+inspect(quiz)
+
+quiz <- tm_map(quiz, stripWhitespace)
+
+quiz <- tm_map(quiz, tolower)
+
+quiz <- tm_map(quiz, removeWords, stopwords('english'))
+
+quiz <- tm_map(quiz, stemDocument)
+
+quiz <- tm_map(quiz, removeNumbers)
+
+quiz <- tm_map(quiz, removePunctuation)
+
+quiz <- tm_map(quiz, PlainTextDocument)
+
+wordcloud(quiz, scale=c(5,0.5), max.words=100, random.order=FALSE, rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, 'Dark2'))
+
+```
+
+
